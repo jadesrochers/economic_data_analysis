@@ -1,9 +1,9 @@
 #!/bin/bash
 
-# Dataset=$1
-Dataset=CAINC1
-# Region=$2
-Region=NY
+Dataset=$1
+# Dataset=CAINC1
+Region=$2
+# Region=NY
 Years=All
 Format=JSON
 UserToken=74B6144A-CFBF-48F9-9A6E-F50213F7FA39
@@ -26,7 +26,7 @@ get_data_and_metadata() {
     local dl_filename="tmp_BEA_datameta_${tablename}_${linecode}.json"
     local csv_filename="dl_BEA_${tablename}_fulltable.csv"
     curl -X GET -o "${dl_filename}" -L "http://apps.bea.gov/api/data?UserID=74B6144A-CFBF-48F9-9A6E-F50213F7FA39&method=GetData&datasetname=Regional&GeoFips=${Region}&TableName=${tablename}&LineCode=${linecode}&Year=${Years}&ResultFormat=${Format}"
-    jq -r '["GeoFips", "GeoName", "TimePeriod", .BEAAPI.Results.Data[0].Code], (.BEAAPI.Results.Data | sort_by(.GeoFips,.TimePeriod)[] | [.GeoFips, .GeoName, .TimePeriod, .DataValue]) | @csv' < "$dl_filename" > "$csv_filename"
+    jq -r '["GeoFips", "GeoName", "TimePeriod", .BEAAPI.Results.Data[0].Code], (.BEAAPI.Results.Data | sort_by(.GeoFips,.TimePeriod)[] | [.GeoFips,.GeoName,.TimePeriod,.DataValue]) | @csv' < "$dl_filename" > "$csv_filename"
     rm "$dl_filename"
     printf '%s' "$csv_filename"
     set +x
@@ -50,6 +50,7 @@ append_more_data() {
 
 LineCodes=($(get_linecodes "$Dataset"))
 n=0
+basefilename=''
 for linecode in ${LineCodes[@]}: do
     local basefilename
     if n -eq 0; then
