@@ -3,10 +3,10 @@ import numpy as np
 import re
 import sys
 
-print('Args: ', sys.argv)
+import pdb; pdb.set_trace()
 inputname=sys.argv[1]
 outputname=sys.argv[2]
-print('Input: {input}, Output: {Output}'.format(input=inputname, output=outputname))
+print('Input: {input}, Output: {output}'.format(input=inputname, output=outputname))
 # filename='dl_BEA_CAINC1_fulltable_3.csv'
 
 num = re.compile('[",0-9]+')
