@@ -5,8 +5,9 @@ curl -X GET -o BLS_surveys_AP_consumerPriceData.json -L "https://api.bls.gov/pub
 
 # Get 25 most popular time series within a survey
 curl -X GET -o BLS_surveys_CPS_consumerPriceData.json -L "https://api.bls.gov/publicAPI/v2/timeseries/popular?survey=AP"
-# LF/LN are labor stats from current population survey
-curl -X GET -o BLS_surveys_LN_LaborForceStats_from_CPS.json -L "https://api.bls.gov/publicAPI/v2/timeseries/popular?survey=LN"
+# 25 Most popular from LF/LN 
+# labor stats from Current Population Survey (CPS)
+curl -X GET -o BLS_survey_LN_LaborForceStats_from_CPS.json -L "https://api.bls.gov/publicAPI/v2/timeseries/popular?survey=LN"
 
 # Getting all data at once, then filtering:
 ## https://download.bls.gov/pub/time.series/

@@ -1,5 +1,6 @@
-#!/usr/bin/python3
+#!/usr/bin/env python3
 
+# Use the local python interpreter
 # Shell was not going to cut it, bringing python in now
 # Need to extract only desired traces from a large file, put that
 # into dataframe as single or multiple cols, then re-arrange if needed
@@ -7,20 +8,26 @@
 import pandas as pd
 import numpy as np
 from pandas import DataFrame
+import sys
+
+inputname=sys.argv[1]
+outputname=sys.argv[2]
 
 def print_data(df):
     print(df.loc[:,'LNS11300000'].to_string())
     df.loc[(2022, 'M01'),'LNS11300000']
 
 
-def load_and_rearrange(filename):
-    selected_series_df = pd.read_csv('SelectedSeries.txt', names=['series','year','month','value'])
+def load_and_rearrange(infile, outfile):
+    selected_series_df = pd.read_csv(infile, names=['series','year','month','value'])
     # Use pivot table method to re-arrange the data into series
     rearrange = pd.pivot_table(selected_series_df, values='value', index=['year', 'month'], columns=['series'])
-    rearrange.to_csv('rearranged_selected_series.csv')
+    ones = np.full(shape=(len(rearrange.index)), fill_value=1)
+    rearrange['day'] = ones
+    rearrange.to_csv(outfile)
 
 
-load_and_rearrange('SelectedSeries.txt')
+load_and_rearrange(inputname, outputname)
 
 def load_rearranged():
     series_df = pd.read_csv('rearranged_selected_series.txt')
