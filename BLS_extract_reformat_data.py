@@ -9,9 +9,11 @@ import pandas as pd
 import numpy as np
 from pandas import DataFrame
 import sys
+import re
 
 inputname=sys.argv[1]
 outputname=sys.argv[2]
+
 
 def print_data(df):
     print(df.loc[:,'LNS11300000'].to_string())
@@ -20,8 +22,12 @@ def print_data(df):
 
 def load_and_rearrange(infile, outfile):
     selected_series_df = pd.read_csv(infile, names=['series','year','month','value'])
+    patt = re.compile('^M0*', flags=0)
+    selected_series_df['month'] = selected_series_df['month'].map(lambda x: patt.sub('', x, count=0))
+    selected_series_df['month'] = selected_series_df['month'].astype('int')
     # Use pivot table method to re-arrange the data into series
     rearrange = pd.pivot_table(selected_series_df, values='value', index=['year', 'month'], columns=['series'])
+    rearrange_1 = rearrange.reset_index().sort_values(['year', 'month'], ascending=[1,1]).set_index(['year', 'month'])
     ones = np.full(shape=(len(rearrange.index)), fill_value=1)
     rearrange['day'] = ones
     rearrange.to_csv(outfile)

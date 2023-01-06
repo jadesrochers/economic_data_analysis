@@ -29,7 +29,7 @@ cols_inc = rearrange_medincome.columns
 palette_inc = bpalettes.viridis(len(cols_inc))
 
 # Generate a palette from a single color specified in RGBA HEX
-cols_emp = employment_df.columns
+cols_emp = employment_df.drop(columns = ['year', 'month', 'day']).columns
 palette_emp_grn = bpalettes.varying_alpha_palette('#1B6C1F', len(cols_emp), 30, 255)
 
 palette_spec = bpalettes.varying_alpha_palette(bpalettes.Spectral11[0], len(cols_emp), 50, 255)
@@ -49,12 +49,10 @@ def tabulate_income_data(df, cols_inc, palette):
 def tabulate_employment_data(df, cols_emp, palette):
     data=defaultdict(list)
     data['color'] = palette
-    import pdb; pdb.set_trace()
     # Need to convert the month, otherwise should work
     date_input = df.loc[:,('year','month','day')]
     for (col, color) in zip(cols_emp, palette):
-        import pdb; pdb.set_trace();
-        data['xdata'].append(pd.to_datetime(df))
+        data['xdata'].append(pd.to_datetime(date_input))
         data['lines'].append(df[col])
         data['series_id'].append(col)
         # fg.line(df.index, df[col], legend_label=col, color=color)
@@ -69,7 +67,6 @@ def plot_many_cols(title, xlabel, ylabel, fig_options, line_options):
     show(fg)
 
 
-import pdb; pdb.set_trace()
 data_inc = tabulate_income_data(rearrange_medincome, cols_inc, palette_inc)
 # You specify pairs of ('Display Name', '@data_source') for tooltip
 fig_options = dict(
@@ -86,14 +83,15 @@ plot_many_cols('Median Income', 'Year', 'Income, $', fig_options, line_options)
 import pdb; pdb.set_trace()
 data_emp = tabulate_employment_data(employment_df, cols_emp, palette_emp_grn)
 fig_options = dict(
-    tooltips=[('Series', '@series_id')]
+    tooltips=[('Series', '@series_id')],
+    x_axis_type='datetime'
 )
 # A dict data source, the names in this dict then are used to get data
 line_options=dict(
     source=data_emp,
     line_color='color'
 )
-plot_many_cols('Various Employ %', 'Year and Month', 'Pct, %, $', fig_options, line_options)
+plot_many_cols('Various Employ %', 'Year, Month', 'Pct, %', fig_options, line_options)
 # You specify pairs of ('Display Name', '@data_source') for tooltip
 # fg = figure(title="ROC curves", width=800, height=600, tools="pan, reset, save")
 # Plot two lines (you can plot as many as you want), these were ROCurves

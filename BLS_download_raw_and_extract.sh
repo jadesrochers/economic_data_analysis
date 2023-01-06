@@ -28,7 +28,8 @@ unemploymentSeries=$(grep -E '^[A-Z0-9]+[0]{5,}.*M.*(Seas).*[Uu]nemployment' < B
 
 ## Narrow the text file down to just the target series to 
 # make things faster on the Python side:
-touch SelectedSeries.txt
+rm BLS_LN_Selected_Series.txt
+touch BLS_LN_Selected_Series.txt
 for series in ${participationSeries[@]}; do
    grep -E "^${series}\s" <BLS_LaborForceStats_LN_data_ALL.txt >>BLS_LN_Selected_Series.txt
 done
@@ -36,4 +37,5 @@ for series in ${unemploymentSeries[@]}; do
    grep -E "^${series}\s" <BLS_LaborForceStats_LN_data_ALL.txt >>BLS_LN_Selected_Series.txt
 done
 
+sed -i.back -r 's/\s+$//g; s/\s+/,/g;' BLS_LN_Selected_Series.txt
 
