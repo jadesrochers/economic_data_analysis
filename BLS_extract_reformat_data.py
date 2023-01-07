@@ -20,25 +20,26 @@ def print_data(df):
     df.loc[(2022, 'M01'),'LNS11300000']
 
 
-def load_and_rearrange(infile, outfile):
+def load_pivot_save(infile, outfile):
     selected_series_df = pd.read_csv(infile, names=['series','year','month','value'])
     patt = re.compile('^M0*', flags=0)
     selected_series_df['month'] = selected_series_df['month'].map(lambda x: patt.sub('', x, count=0))
+    # Convert to correct type to get expected sorting
     selected_series_df['month'] = selected_series_df['month'].astype('int')
     # Use pivot table method to re-arrange the data into series
-    rearrange = pd.pivot_table(selected_series_df, values='value', index=['year', 'month'], columns=['series'])
-    rearrange_1 = rearrange.reset_index().sort_values(['year', 'month'], ascending=[1,1]).set_index(['year', 'month'])
-    ones = np.full(shape=(len(rearrange.index)), fill_value=1)
-    rearrange['day'] = ones
-    rearrange.to_csv(outfile)
+    pivoted = pd.pivot_table(selected_series_df, values='value', index=['year', 'month'], columns=['series'])
+    ones = np.full(shape=(len(pivoted.index)), fill_value=1)
+    pivoted['day'] = ones
+    pivoted.to_csv(outfile)
 
 
-load_and_rearrange(inputname, outputname)
+load_pivot_save(inputname, outputname)
 
-def load_rearranged():
-    series_df = pd.read_csv('rearranged_selected_series.txt')
+def load_output():
+    series_df = pd.read_csv(outputname)
     # You lose the indexes, but can still readily access the data
     print(series_df.loc[:,'LNS11300000'].to_string())
     series_df.loc[series_df.year == 2022,'LNS11300000']
     series_df.query('year == 2022 & month == \'M01\'').loc[:,'LNS11300000']
+
 

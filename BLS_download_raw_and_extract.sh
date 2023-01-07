@@ -23,19 +23,25 @@ fi
 # grep -E '^[A-Z0-9]+[0]{5,}.*M.*(Seas).*[Uu]nemployment' < BLS_LaborForceStats_LN_series.txt
 
 ## And extract the series ids from those 
-participationSeries=$(grep -E '^[A-Z0-9]+[0]{4,}.*M.*(Seas).*[Pp]articipation' < BLS_LaborForceStats_LN_series.txt | awk '{print $1}')
-unemploymentSeries=$(grep -E '^[A-Z0-9]+[0]{5,}.*M.*(Seas).*[Uu]nemployment' < BLS_LaborForceStats_LN_series.txt | awk '{print $1}')
+participationRateSeries=$(grep -E '^[A-Z0-9]+[0]{4,}.*M.*(Seas).*[Pp]articipation Rate' < BLS_LaborForceStats_LN_series.txt | awk '{print $1}')
+unemploymentRateSeries=$(grep -E '^[A-Z0-9]+[0]{5,}.*M.*(Seas).*[Uu]nemployment Rate' < BLS_LaborForceStats_LN_series.txt | awk '{print $1}')
+unemploymentLevelSeries=$(grep -E '^[A-Z0-9]+[0]{5,}.*M.*(Seas).*[Uu]nemployment Level' < BLS_LaborForceStats_LN_series.txt | awk '{print $1}')
 
 ## Narrow the text file down to just the target series to 
 # make things faster on the Python side:
-rm BLS_LN_Selected_Series.txt
-touch BLS_LN_Selected_Series.txt
-for series in ${participationSeries[@]}; do
-   grep -E "^${series}\s" <BLS_LaborForceStats_LN_data_ALL.txt >>BLS_LN_Selected_Series.txt
+rm BLS_LN_Rate_Series.txt BLS_LN_Level_Series.txt
+touch BLS_LN_Rate_Series.txt BLS_LN_Level_Series.txt
+for series in ${participationRateSeries[@]}; do
+   grep -E "^${series}\s" <BLS_LaborForceStats_LN_data_ALL.txt >>BLS_LN_Rate_Series.txt
 done
-for series in ${unemploymentSeries[@]}; do
-   grep -E "^${series}\s" <BLS_LaborForceStats_LN_data_ALL.txt >>BLS_LN_Selected_Series.txt
+for series in ${unemploymentRateSeries[@]}; do
+   grep -E "^${series}\s" <BLS_LaborForceStats_LN_data_ALL.txt >>BLS_LN_Rate_Series.txt
+done
+for series in ${unemploymentLevelSeries[@]}; do
+   grep -E "^${series}\s" <BLS_LaborForceStats_LN_data_ALL.txt >>BLS_LN_Level_Series.txt
 done
 
-sed -i.back -r 's/\s+$//g; s/\s+/,/g;' BLS_LN_Selected_Series.txt
+# Convert from space separated to comman separated
+sed -i.back -r 's/\s+$//g; s/\s+/,/g;' BLS_LN_Rate_Series.txt
+sed -i.back -r 's/\s+$//g; s/\s+/,/g;' BLS_LN_Level_Series.txt
 
