@@ -66,7 +66,9 @@ append_more_data() {
 }
 
 
-## Don't use this unless you know it won't go over the size limit
+### !!! Don't use this unless you know it won't go over the size limit
+## Size limit is 100 requests or 100MB per min
+
 # LineCodes=($(get_linecodes "$Dataset"))
 # n=0
 # basefilename=''
@@ -81,4 +83,4 @@ append_more_data() {
 #     fi
 # done
 
-basefilename=$(get_data_and_metadata "$Dataset" "$linecode")
+basefilename=$(get_data_and_metadata "$Dataset" "$LineCode")

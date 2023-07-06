@@ -51,7 +51,7 @@ curl -X GET -o dl_bea_linecodes_CAINC1.json -L "http://apps.bea.gov/api/data?Use
 jq -C < dl_bea_dataset_parameter_args.json
 
 
-## Now get the data (only one field at a time, disappointing):
+## Now get the data (only one field at a time):
 curl -X GET -o dl_bea_dataset_CAINC1_2.json -L "http://apps.bea.gov/api/data?UserID=74B6144A-CFBF-48F9-9A6E-F50213F7FA39&method=GetData&datasetname=Regional&GeoFips=NY&TableName=CAINC1&LineCode=2&Year=All&ResultFormat=JSON"
 
 ## Get a different field - checkout out what is feasible to get
