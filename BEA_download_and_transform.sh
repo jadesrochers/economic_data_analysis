@@ -38,6 +38,8 @@ get_linecodes() {
     printf '%s\n' "$linecodes"
 }
 
+
+
 get_data_and_metadata() {
     tablename="$1"
     linecode="$2"
@@ -45,6 +47,11 @@ get_data_and_metadata() {
     local csv_filename="dl_BEA_${tablename}_${linecode}.csv"
     curl -X GET -o "${dl_filename}" -L "https://apps.bea.gov/api/data?UserID=74B6144A-CFBF-48F9-9A6E-F50213F7FA39&method=GetData&datasetname=Regional&GeoFips=${Region}&TableName=${tablename}&LineCode=${linecode}&Year=${Years}&ResultFormat=${Format}"
     jq -r '["GeoFips", "GeoName", "TimePeriod", .BEAAPI.Results.Data[0].Code], (.BEAAPI.Results.Data | sort_by(.GeoFips,.TimePeriod)[] | [.GeoFips,.GeoName,.TimePeriod,.DataValue]) | @csv' < "$dl_filename" > "$csv_filename"
+    if [[ "$Region" -eq "COUNTY" ]]; do
+         sed -i.back -r '1 s/GeoFips/GEO_ID/; s/^([0-9]+)/0500000US\1/' "$csv_filename"
+    else
+         sed -i.back -r '1 s/GeoFips/GEO_ID/; s/^([0-9]+)/0400000US\1/' "$csv_filename"
+    fi
     # rm "$dl_filename"
     printf '%s' "$csv_filename"
 }
@@ -87,7 +94,7 @@ for linecode in ${LineCodes[@]}; do
     fi
     sleep 60;
 done
-mv "$basefilename" "dl_BEA_${Dataset}_fulltable_complete.csv"
+mv "$basefilename" "beadata/BEA_${Dataset}_complete.csv"
 
 
 # basefilename=$(get_data_and_metadata "$Dataset" "$LineCode")
