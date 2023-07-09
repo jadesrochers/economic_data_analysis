@@ -5,7 +5,7 @@ geojsonfiles = {
      'us_county': 'us_county_outline_geojson.json'
 }
 
-def getgeojson(name: str):
+def getgeojson(name: str) -> str:
     with open(geojsonfiles[name]) as file:
         return json.loads(file.read()) 
 

@@ -19,7 +19,7 @@ async def get_table_annual_data(table: str, linecode: int, year: int) -> BeaData
         data = beadata.get_data(table, linecode)
     except Exception as e:
         raise HTTPException(status_code=404, detail='Problem retrieving data for table: {table} linecode: {linecode}, year: {year}'.format(table=table, linecode=linecode, year=year))
-    return data
+    return {'annual_data': data}
 
 
 geojson_names = set('us_state', 'us_county')

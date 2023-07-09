@@ -48,9 +48,9 @@ get_data_and_metadata() {
     curl -X GET -o "${dl_filename}" -L "https://apps.bea.gov/api/data?UserID=74B6144A-CFBF-48F9-9A6E-F50213F7FA39&method=GetData&datasetname=Regional&GeoFips=${Region}&TableName=${tablename}&LineCode=${linecode}&Year=${Years}&ResultFormat=${Format}"
     jq -r '["GeoFips", "GeoName", "TimePeriod", .BEAAPI.Results.Data[0].Code], (.BEAAPI.Results.Data | sort_by(.GeoFips,.TimePeriod)[] | [.GeoFips,.GeoName,.TimePeriod,.DataValue]) | @csv' < "$dl_filename" > "$csv_filename"
     if [[ "$Region" -eq "COUNTY" ]]; do
-         sed -i.back -r '1 s/GeoFips/GEO_ID/; s/^([0-9]+)/0500000US\1/' "$csv_filename"
+         sed -i -r '1 s/GeoFips/GEO_ID/; s/^"([0-9]+)/"0500000US\1/' "$csv_filename"
     else
-         sed -i.back -r '1 s/GeoFips/GEO_ID/; s/^([0-9]+)/0400000US\1/' "$csv_filename"
+         sed -i -r '1 s/GeoFips/GEO_ID/; s/^"([0-9]+)/"0400000US\1/' "$csv_filename"
     fi
     # rm "$dl_filename"
     printf '%s' "$csv_filename"

@@ -3,7 +3,13 @@ import csv
 from pathlib import Path
 import pandas as pd
 import re
-import vaex
+from typing import Dict
+import locale
+
+# Will use the system locale to determine the locale to set
+# relevant for numeric conversions and (what?) other
+locale.setlocale(locale.LC_ALL, '')
+default_value = 0.0
 
 data_path = Path('./beadata')
 geoid = 'GEO_ID'
@@ -15,7 +21,7 @@ def find_datafile(table: str):
      
 
 # Use the built in csv, see if you can avoid doing vaex or pandas
-def get_annual_data_csv(table: str, linecode: str, year: str):
+def get_annual_data(table: str, linecode: str, year: str) -> Dict[str, float]:
     table_path = find_datafile(table)
     compiled_data = {}
     with open(table_path) as datafile:
@@ -31,27 +37,8 @@ def get_annual_data_csv(table: str, linecode: str, year: str):
                 data_key = next(x for x in filter(filt, keynames))
                 n = False
             if row[timeperiod] == year:
-                import pdb; pdb.set_trace()
-                compiled_data[row[geoid]] = row[data_key]
+                compiled_data[row[geoid]] = default_value if row[data_key].startswith('(NA)') else locale.atof(row[data_key])
     return compiled_data
-
-
-
-def get_annual_data(table: str, linecode: str, year: str):
-    table_path = find_datafile(table)
-    # data_df = pd.read_csv(table_path, index_col=0)
-    vdf = vaex.from_csv(table_path)
-    # Filter the data
-    vdf[vdf.TimePeriod == year]
-    has_linecode = re.compile("[^\-]*-[0-9]+$")
-    for column in vdf.column_names:
-        if bool(has_linecode.match(column)):
-            if not column.endswith(str(linecode)):
-                vdf.drop(column, inplace=True)
-    # Dont see this in the docs anywhere, but try it
-    rslt = vdf.export_json()
-    # Otherwise, convert to pandas, then to json
-    # vdf.to_pandas_df().to_json
 
 
 
