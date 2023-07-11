@@ -1,5 +1,5 @@
 from pydantic import BaseModel
+from typing import Dict
 
-class BeaData(BaseModel):
-    geoid_data: dict[str, float]
+Beadata = Dict[str, float]
 

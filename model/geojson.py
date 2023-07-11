@@ -1,4 +1,5 @@
 from pydantic import BaseModel
+from typing import List
 
 class GeoProperties(BaseModel):
     GEO_ID: str
@@ -7,7 +8,7 @@ class GeoProperties(BaseModel):
 class Geometry(BaseModel):
     type: str
     # This may be deeply nested, but just calling it a float array
-    coordinates: list[float]
+    coordinates: List[float]
 
 class Feature(BaseModel):
     type: str
@@ -20,4 +21,4 @@ class GeoJson(BaseModel):
     source: str
     description: str
     website: str
-    features: list[Feature]
+    features: List[Feature]

@@ -7,7 +7,7 @@ from typing import Dict
 import locale
 
 # Will use the system locale to determine the locale to set
-# relevant for numeric conversions and (what?) other
+# relevant for str -> numeric conversions and other stuff (what else?) 
 locale.setlocale(locale.LC_ALL, '')
 default_value = 0.0
 
