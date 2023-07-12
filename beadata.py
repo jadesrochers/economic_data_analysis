@@ -3,7 +3,7 @@ import csv
 from pathlib import Path
 import pandas as pd
 import re
-from typing import Dict
+from typing import Dict, List
 import locale
 
 # Will use the system locale to determine the locale to set
@@ -17,6 +17,10 @@ timeperiod = 'TimePeriod'
 
 def find_datafile(table: str):
     table_path = list(data_path.glob('BEA_{table}_complete.csv'.format(table=table)))[0]
+    return table_path
+
+def find_metadata(table: str):
+    table_path = list(data_path.glob('BEA_{table}_metadata.csv'.format(table=table)))[0]
     return table_path
      
 
@@ -40,6 +44,8 @@ def get_annual_data(table: str, linecode: str, year: str) -> Dict[str, float]:
                 compiled_data[row[geoid]] = default_value if row[data_key].startswith('(NA)') else locale.atof(row[data_key])
     return compiled_data
 
+def get_years(table: str) -> List[int]:
+    metadata_path = find_metadata(table)
 
 
 # cat my.csv | python -c 'import csv, json, sys; print(json.dumps([dict(r) for r in csv.DictReader(sys.stdin)]))'

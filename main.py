@@ -2,7 +2,7 @@ from fastapi import FastAPI, HTTPException
 from model.beadata import Beadata
 from model.geojson import GeoJson
 from geojson import getgeojson
-from typing import Dict
+from typing import Dict, List
 import beadata
 
 app = FastAPI()
@@ -23,6 +23,14 @@ async def get_table_annual_data(table: str, linecode: str, year: str) -> Dict[st
     except Exception as e:
         raise HTTPException(status_code=404, detail='Problem retrieving data for table: {table} linecode: {linecode}, year: {year}'.format(table=table, linecode=linecode, year=year))
     return {'annual_data': data}
+
+
+@app.get("/beadata/{table}/years")
+async def get_years_for_table(table: str) -> Dict[str, List[int]]:
+    try:
+        years = beadata.get_years(table)
+    except Exception as e:
+        raise HTTPException(status_code=404, detail='Problem retrieving years for table: {table}'.format(table=table))
 
 
 geojson_names = set(['us_state', 'us_county'])
