@@ -31,6 +31,7 @@ async def get_years_for_table(table: str) -> Dict[str, List[int]]:
         years = beadata.get_years(table)
     except Exception as e:
         raise HTTPException(status_code=404, detail='Problem retrieving years for table: {table}'.format(table=table))
+    return {'years': years}
 
 
 geojson_names = set(['us_state', 'us_county'])

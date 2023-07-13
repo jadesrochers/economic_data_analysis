@@ -20,7 +20,7 @@ def find_datafile(table: str):
     return table_path
 
 def find_metadata(table: str):
-    table_path = list(data_path.glob('BEA_{table}_metadata.csv'.format(table=table)))[0]
+    table_path = list(data_path.glob('BEA_{table}_metadata.json'.format(table=table)))[0]
     return table_path
      
 
@@ -46,6 +46,9 @@ def get_annual_data(table: str, linecode: str, year: str) -> Dict[str, float]:
 
 def get_years(table: str) -> List[int]:
     metadata_path = find_metadata(table)
+    with open(metadata_path) as metafile:
+        data = json.load(metafile)
+        return data['years']
 
 
 # cat my.csv | python -c 'import csv, json, sys; print(json.dumps([dict(r) for r in csv.DictReader(sys.stdin)]))'

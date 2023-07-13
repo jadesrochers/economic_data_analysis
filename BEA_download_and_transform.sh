@@ -45,11 +45,11 @@ get_data_and_metadata() {
     linecode="$2"
     local dl_filename="tmp_BEA_datameta_${tablename}_${linecode}.json"
     local csv_filename="dl_BEA_${tablename}_${linecode}.csv"
-    local metadata_filename="BEA_${tablename}_metadata.json"
+    local metadata_filename="beadata/BEA_${tablename}_metadata.json"
     curl -X GET -o "${dl_filename}" -L "https://apps.bea.gov/api/data?UserID=74B6144A-CFBF-48F9-9A6E-F50213F7FA39&method=GetData&datasetname=Regional&GeoFips=${Region}&TableName=${tablename}&LineCode=${linecode}&Year=${Years}&ResultFormat=${Format}"
     jq -r '["GeoFips", "GeoName", "TimePeriod", .BEAAPI.Results.Data[0].Code], (.BEAAPI.Results.Data | sort_by(.GeoFips,.TimePeriod)[] | [.GeoFips,.GeoName,.TimePeriod,.DataValue]) | @csv' < "$dl_filename" > "$csv_filename"
     jq -r '{"years": (.BEAAPI.Results.Data[:1000] | [.[].TimePeriod] | unique)}' < "$dl_filename" > "$metadata_filename"
-    if [[ "$Region" -eq "COUNTY" ]]; do
+    if [[ "$Region" == "COUNTY" ]]; then
          sed -i -r '1 s/GeoFips/GEO_ID/; s/^"([0-9]+)/"0500000US\1/' "$csv_filename"
     else
          sed -i -r '1 s/GeoFips/GEO_ID/; s/^"([0-9]+)/"0400000US\1/' "$csv_filename"
