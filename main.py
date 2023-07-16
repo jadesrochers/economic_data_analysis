@@ -1,11 +1,26 @@
 from fastapi import FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
 from model.beadata import Beadata
-from model.geojson import GeoJson
+from model.geojson import GeoData
 from geojson import getgeojson
 from typing import Dict, List
 import beadata
 
 app = FastAPI()
+
+origins = [
+    "*",
+    "http://localhost",
+    "http://127.0.0.1",
+] 
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 
 @app.get("/health")
@@ -36,11 +51,9 @@ async def get_years_for_table(table: str) -> Dict[str, List[int]]:
 
 geojson_names = set(['us_state', 'us_county'])
 @app.get("/geojson/{name}")
-async def get_geojson(name: str) -> GeoJson:
-    # store the geojson locally, access and return.
-    # Get this from my mongodb database.
+async def get_geojson(name: str) -> GeoData:
+    print('Geojson data endpoint hit')
     if name not in geojson_names:
         raise HTTPException(status_code=404, detail='GeoJson item: {name} not found'.format(name=name))
-    geojson = getgeojson(name)
-    return {'geojson': geojson}
+    return getgeojson(name)
 

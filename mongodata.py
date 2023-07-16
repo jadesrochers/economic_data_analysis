@@ -3,6 +3,7 @@ from urllib.parse import quote_plus
 # For serializing the return from mongodb
 from bson import json_util
 import json
+import pickle
 
 
 mongouser='loony'
@@ -18,31 +19,45 @@ database = mongodb_client[DB_NAME]
 for coll in database.list_collections():
     print('Collection: ', coll)
 
-county_coll = database.get_collection('US_County_Outline')
-state_coll = database.get_collection('US_State_Outline')
-all_county_data = county_coll.find_one()
-all_state_data = state_coll.find_one()
 
-# See how you actually set up the data
-all_county_data.keys()
-all_state_data.keys()
+def get_county_data(database):
+    county_coll = database.get_collection('US_County_Outline')
+    return county_coll.find_one()
+
+def get_state_data(database):
+    state_coll = database.get_collection('US_State_Outline')
+    return state_coll.find_one()
+
 
 # Check out a few of the keys
-print('County Data _id: {id}, name: {name}, and description: {description}'.format(id=all_county_data.get('_id'), name=all_county_data.get('name'), description=all_county_data.get('description')))
-print('State Data _id: {id}, name: {name}, and description: {description}'.format(id=all_state_data.get('_id'), name=all_state_data.get('name'), description=all_state_data.get('description')))
-import pdb; pdb.set_trace()
+# print('County Data _id: {id}, name: {name}, and description: {description}'.format(id=all_county_data.get('_id'), name=all_county_data.get('name'), description=all_county_data.get('description')))
+# print('State Data _id: {id}, name: {name}, and description: {description}'.format(id=all_state_data.get('_id'), name=all_state_data.get('name'), description=all_state_data.get('description')))
 
 # Get the county and state geojson data here
+def find_by_name(collection, name):
+    blah = collection.find({ 'name': name})
+    blahrslt = blah.next()
+    return blahrslt.keys()
 
-with open('us_county_outline_geojson.json', 'w') as f:
-    json.dump(json_util.dumps(all_county_data), f, ensure_ascii=False)
+def pickle_data_binary(data, filename: str):
+    with open(filename, 'wb') as f:
+        pickle.dump(data, f)
 
-with open('us_state_outline_geojson.json', 'w') as f:
-    json.dump(json_util.dumps(all_state_data), f, ensure_ascii=False)
+def save_formatted_text(data: json, filename: str):
+    with open(filename, 'w') as f:
+        json.dump(data, f, indent=4, ensure_ascii=False)
 
 
-# Test out a find operation - worked knowing the name of the data
-blah = county_coll.find({ 'name': 'US_County_Outline'})
-blahrslt = blah.next()
-blahrslt.keys()
-blahrslt.get('name')
+# all_county_data = get_county_data(database)
+all_state_data = get_state_data(database)
+# This causes problems for everything, get rid of it
+del all_state_data['_id']
+
+# pickle_data_binary(all_county_data, 'us_county_outline_geojson.json')
+# pickle_data_binary(all_state_data, 'us_state_outline_geojson.json')
+save_formatted_text(all_state_data, 'us_state_outline_geojson.txt')
+
+# county_coll = database.get_collection('US_County_Outline')
+# state_coll = database.get_collection('US_State_Outline')
+# find_by_name(county_coll, 'US_County_Outline')
+
