@@ -44,6 +44,24 @@ def get_annual_data(table: str, linecode: str, year: str) -> Dict[str, float]:
                 compiled_data[row[geoid]] = default_value if row[data_key].startswith('(NA)') else locale.atof(row[data_key])
     return compiled_data
 
+
+def get_time_series_data(table: str, linecode: str) -> Dict[str, List[float]]:
+    table_path = find_datafile(table)
+    raw_data = pd.read_csv(table_path)
+
+    # This should work and replace missing with 0.0: 
+    pivoted_table = pd.pivot_table(raw_data, index='GEO_ID', columns='TimePeriod', values='Values', fill_value=0.0)
+    pivot_melt = pd.melt(pivoted_table.reset_index(), id_vars='GEO_ID')
+    pivot_grouped = pivot_melt.groupby('GEO_ID')['value'].apply(list)
+
+
+    # This assumes no missing data but is very simple
+    grouped = raw_data.groupby('GEO_ID')['Values'].apply(list)
+    geoid_tovalue = grouped.to_dict()
+
+    return geoid_tovalue
+
+
 def get_years(table: str) -> List[int]:
     metadata_path = find_metadata(table)
     with open(metadata_path) as metafile:
