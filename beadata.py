@@ -62,6 +62,18 @@ def get_time_series_data(table: str, linecode: str) -> Dict[str, List[float]]:
     return geoid_tovalue
 
 
+def get_state_mean(table: str, linecode: str, year: str) -> Dict[str, float]:
+    state_regex = re.compile('^[0-9]*US[0-9]{2}')
+    table_path = find_datafile(table)
+    raw_data = pd.read_csv(table_path)
+    raw_data['Values'] = raw_data['CAINC1-1'].map(lambda x: default_value if  x.startswith('(NA)') else locale.atof(x))
+    raw_data['State_Geoid'] = raw_data['GEO_ID'].map(lambda x: state_regex.search(x).group(0));
+    import pdb; pdb.set_trace()
+    pivoted_state_sum = pd.pivot_table(raw_data, index='State_Geoid', columns='TimePeriod', aggfunc='sum', values='Values', fill_value=0.0)
+    county_year_sum = raw_data.groupby(['State_Geoid', 'TimePeriod'])['Values'].transform('sum')
+    county_year_pct = 100 * (raw_data['Values'] / county_year_sum)
+
+
 def get_years(table: str) -> List[int]:
     metadata_path = find_metadata(table)
     with open(metadata_path) as metafile:
