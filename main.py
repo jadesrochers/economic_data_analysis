@@ -3,7 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from model.beadata import Beadata
 from model.geojson import GeoData
 from geojson import getgeojson
-from typing import Dict, List
+from typing import Dict, List, Union
 import beadata
 
 app = FastAPI()
@@ -38,6 +38,42 @@ async def get_table_annual_data(table: str, linecode: str, year: str) -> Dict[st
     except Exception as e:
         raise HTTPException(status_code=404, detail='Problem retrieving data for table: {table} linecode: {linecode}, year: {year}'.format(table=table, linecode=linecode, year=year))
     return {'annual_data': data}
+
+
+@app.get("/beadata/county_timeseries/{table}/{linecode}")
+async def get_county_timeseries(table: str, linecode: str) -> Dict[str, List[Union[int, float]]]:
+    print('Getting time series for table: {table}, linecode: {linecode}'.format(table=table, linecode=linecode))
+    # Code to get the table data 
+    data = {}
+    try:
+        data = beadata.get_time_series_data(table, linecode)
+    except Exception as e:
+        raise HTTPException(status_code=404, detail='Problem retrieving time series for table: {table} linecode: {linecode}'.format(table=table, linecode=linecode))
+    return data
+
+
+@app.get("/beadata/county_proportions/{table}/{linecode}")
+async def get_county_proportion(table: str, linecode: str) -> Dict[str, List[Union[int, float]]]:
+    print('Getting time series for table: {table}, linecode: {linecode}'.format(table=table, linecode=linecode))
+    # Code to get the table data 
+    data = {}
+    try:
+        data = beadata.get_county_proportion(table, linecode)
+    except Exception as e:
+        raise HTTPException(status_code=404, detail='Problem retrieving time series for table: {table} linecode: {linecode}'.format(table=table, linecode=linecode))
+    return data
+
+
+@app.get("/beadata/state_proportions/{table}/{linecode}")
+async def get_state_proportion(table: str, linecode: str) -> Dict[str, List[Union[int, float]]]:
+    print('Getting time series for table: {table}, linecode: {linecode}'.format(table=table, linecode=linecode))
+    # Code to get the table data 
+    data = {}
+    try:
+        data = beadata.get_state_proportion(table, linecode)
+    except Exception as e:
+        raise HTTPException(status_code=404, detail='Problem retrieving time series for table: {table} linecode: {linecode}'.format(table=table, linecode=linecode))
+    return data
 
 
 @app.get("/beadata/{table}/years")

@@ -45,33 +45,49 @@ def get_annual_data(table: str, linecode: str, year: str) -> Dict[str, float]:
     return compiled_data
 
 
+# Get all years of data for each geoid (county in this case)
 def get_time_series_data(table: str, linecode: str) -> Dict[str, List[float]]:
     table_path = find_datafile(table)
     raw_data = pd.read_csv(table_path)
-
+    data_series = '{table}-{linecode}'.format(table=table, linecode=linecode)
+    raw_data['Values'] = raw_data[data_series].map(lambda x: default_value if  x.startswith('(NA)') else locale.atof(x))
     # This should work and replace missing with 0.0: 
     pivoted_table = pd.pivot_table(raw_data, index='GEO_ID', columns='TimePeriod', values='Values', fill_value=0.0)
-    pivot_melt = pd.melt(pivoted_table.reset_index(), id_vars='GEO_ID')
-    pivot_grouped = pivot_melt.groupby('GEO_ID')['value'].apply(list)
-
-
+    return pivoted_table.T.to_dict(orient='list')
+    # pivot_melt = pd.melt(pivoted_table.reset_index(), id_vars='GEO_ID')
+    # pivot_grouped = pivot_melt.groupby('GEO_ID')['value'].apply(list)
     # This assumes no missing data but is very simple
-    grouped = raw_data.groupby('GEO_ID')['Values'].apply(list)
-    geoid_tovalue = grouped.to_dict()
-
-    return geoid_tovalue
+    # grouped = raw_data.groupby('GEO_ID')['Values'].apply(list)
+    # geoid_tovalue = grouped.to_dict()
 
 
-def get_state_mean(table: str, linecode: str, year: str) -> Dict[str, float]:
+# Get the mean of each state, country proportions
+def get_county_proportion(table: str, linecode: str) -> Dict[str, float]:
     state_regex = re.compile('^[0-9]*US[0-9]{2}')
     table_path = find_datafile(table)
     raw_data = pd.read_csv(table_path)
-    raw_data['Values'] = raw_data['CAINC1-1'].map(lambda x: default_value if  x.startswith('(NA)') else locale.atof(x))
+    data_series = '{table}-{linecode}'.format(table=table, linecode=linecode)
+    raw_data['Values'] = raw_data[data_series].map(lambda x: default_value if  x.startswith('(NA)') else locale.atof(x))
     raw_data['State_Geoid'] = raw_data['GEO_ID'].map(lambda x: state_regex.search(x).group(0));
-    import pdb; pdb.set_trace()
-    pivoted_state_sum = pd.pivot_table(raw_data, index='State_Geoid', columns='TimePeriod', aggfunc='sum', values='Values', fill_value=0.0)
+    # Get sum for the state for each county/year to do proportion calc
     county_year_sum = raw_data.groupby(['State_Geoid', 'TimePeriod'])['Values'].transform('sum')
     county_year_pct = 100 * (raw_data['Values'] / county_year_sum)
+    year_sum = raw_data.groupby(['TimePeriod'])['Values'].transform('sum')
+    raw_data['county_pct'] = county_year_pct
+    pivoted_county_proportion = pd.pivot_table(raw_data, index='GEO_ID', columns='TimePeriod', aggfunc='sum', values='county_pct', fill_value=0.0)
+    return pivoted_county_proportion.T.to_dict(orient='list')
+
+
+def get_state_proportion(table: str, linecode: str) -> Dict[str, float]:
+    state_regex = re.compile('^[0-9]*US[0-9]{2}')
+    table_path = find_datafile(table)
+    raw_data = pd.read_csv(table_path)
+    data_series = '{table}-{linecode}'.format(table=table, linecode=linecode)
+    raw_data['Values'] = raw_data[data_series].map(lambda x: default_value if  x.startswith('(NA)') else locale.atof(x))
+    raw_data['State_Geoid'] = raw_data['GEO_ID'].map(lambda x: state_regex.search(x).group(0));
+    pivoted_state_sum = pd.pivot_table(raw_data, index='State_Geoid', columns='TimePeriod', aggfunc='sum', values='Values', fill_value=0.0)
+    state_proportions = pivoted_state_sum.div(pivoted_state_sum.sum(axis=0), axis=1)
+    return state_proportions.T.to_dict(orient='list')
 
 
 def get_years(table: str) -> List[int]:
