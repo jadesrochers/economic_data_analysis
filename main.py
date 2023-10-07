@@ -28,6 +28,42 @@ async def root():
     return {"message": "Server is operating"}
 
 
+@app.get("/beadata/county_timeseries/{table}/{linecode}")
+async def get_county_timeseries(table: str, linecode: str) -> Dict[str, List[Dict[str, Union[int, float]]]]:
+    print('Getting time series for table: {table}, linecode: {linecode}'.format(table=table, linecode=linecode))
+    # Code to get the table data 
+    data = {}
+    try:
+        data = beadata.get_time_series_data(table, linecode)
+    except Exception as e:
+        raise HTTPException(status_code=404, detail='Problem retrieving time series for table: {table} linecode: {linecode}'.format(table=table, linecode=linecode))
+    return data
+
+
+@app.get("/beadata/county_proportions/{table}/{linecode}")
+async def get_county_proportion(table: str, linecode: str) -> Dict[str, List[Dict[str, Union[int, float]]]]:
+    print('Getting time series for table: {table}, linecode: {linecode}'.format(table=table, linecode=linecode))
+    # Code to get the table data 
+    data = {}
+    try:
+        data = beadata.get_county_proportion(table, linecode)
+    except Exception as e:
+        raise HTTPException(status_code=404, detail='Problem retrieving time series for table: {table} linecode: {linecode}'.format(table=table, linecode=linecode))
+    return data
+
+
+@app.get("/beadata/state_proportions/{table}/{linecode}")
+async def get_state_proportion(table: str, linecode: str) -> Dict[str, List[Dict[str, Union[int, float]]]]:
+    print('Getting time series for table: {table}, linecode: {linecode}'.format(table=table, linecode=linecode))
+    # Code to get the table data 
+    data = {}
+    try:
+        data = beadata.get_state_proportion(table, linecode)
+    except Exception as e:
+        raise HTTPException(status_code=404, detail='Problem retrieving time series for table: {table} linecode: {linecode}'.format(table=table, linecode=linecode))
+    return data
+
+
 @app.get("/beadata/{table}/{linecode}/{year}")
 async def get_table_annual_data(table: str, linecode: str, year: str) -> Dict[str, Beadata]:
     print('Getting table: {table}, linecode: {linecode}, year: {year}'.format(table=table, linecode=linecode, year=year))
@@ -40,40 +76,6 @@ async def get_table_annual_data(table: str, linecode: str, year: str) -> Dict[st
     return {'annual_data': data}
 
 
-@app.get("/beadata/county_timeseries/{table}/{linecode}")
-async def get_county_timeseries(table: str, linecode: str) -> Dict[str, List[Union[int, float]]]:
-    print('Getting time series for table: {table}, linecode: {linecode}'.format(table=table, linecode=linecode))
-    # Code to get the table data 
-    data = {}
-    try:
-        data = beadata.get_time_series_data(table, linecode)
-    except Exception as e:
-        raise HTTPException(status_code=404, detail='Problem retrieving time series for table: {table} linecode: {linecode}'.format(table=table, linecode=linecode))
-    return data
-
-
-@app.get("/beadata/county_proportions/{table}/{linecode}")
-async def get_county_proportion(table: str, linecode: str) -> Dict[str, List[Union[int, float]]]:
-    print('Getting time series for table: {table}, linecode: {linecode}'.format(table=table, linecode=linecode))
-    # Code to get the table data 
-    data = {}
-    try:
-        data = beadata.get_county_proportion(table, linecode)
-    except Exception as e:
-        raise HTTPException(status_code=404, detail='Problem retrieving time series for table: {table} linecode: {linecode}'.format(table=table, linecode=linecode))
-    return data
-
-
-@app.get("/beadata/state_proportions/{table}/{linecode}")
-async def get_state_proportion(table: str, linecode: str) -> Dict[str, List[Union[int, float]]]:
-    print('Getting time series for table: {table}, linecode: {linecode}'.format(table=table, linecode=linecode))
-    # Code to get the table data 
-    data = {}
-    try:
-        data = beadata.get_state_proportion(table, linecode)
-    except Exception as e:
-        raise HTTPException(status_code=404, detail='Problem retrieving time series for table: {table} linecode: {linecode}'.format(table=table, linecode=linecode))
-    return data
 
 
 @app.get("/beadata/{table}/years")

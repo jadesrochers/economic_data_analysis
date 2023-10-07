@@ -3,7 +3,7 @@ import csv
 from pathlib import Path
 import pandas as pd
 import re
-from typing import Dict, List
+from typing import Dict, List, Union
 import locale
 
 # Will use the system locale to determine the locale to set
@@ -46,15 +46,22 @@ def get_annual_data(table: str, linecode: str, year: str) -> Dict[str, float]:
 
 
 # Get all years of data for each geoid (county in this case)
-def get_time_series_data(table: str, linecode: str) -> Dict[str, List[float]]:
+def get_time_series_data(table: str, linecode: str) -> Dict[str, List[Dict[str, Union[int, float]]]]:
     table_path = find_datafile(table)
     raw_data = pd.read_csv(table_path)
     data_series = '{table}-{linecode}'.format(table=table, linecode=linecode)
-    raw_data['Values'] = raw_data[data_series].map(lambda x: default_value if  x.startswith('(NA)') else locale.atof(x))
+    raw_data['Values'] = raw_data[data_series].map(lambda x: default_value if  x.startswith('(NA)') else round(locale.atof(x), 2))
     # This should work and replace missing with 0.0: 
     pivoted_table = pd.pivot_table(raw_data, index='GEO_ID', columns='TimePeriod', values='Values', fill_value=0.0)
-    return pivoted_table.T.to_dict(orient='list')
-    # pivot_melt = pd.melt(pivoted_table.reset_index(), id_vars='GEO_ID')
+
+    ## This gets nice series for each GEO_ID, but that is not the
+    # format that the plotting libraries want
+    # return pivoted_table.T.to_dict(orient='list')
+
+    ## This gets each GEO_ID: a dict with TimePeriod/value as keys and
+    # the respective time/value as the values, which should work for format.
+    pivot_melt = pd.melt(pivoted_table.reset_index(), id_vars='GEO_ID')
+    return pivot_melt.groupby('GEO_ID').apply(lambda x: x[['TimePeriod', 'value']].to_dict(orient='records')).to_dict()
     # pivot_grouped = pivot_melt.groupby('GEO_ID')['value'].apply(list)
     # This assumes no missing data but is very simple
     # grouped = raw_data.groupby('GEO_ID')['Values'].apply(list)
@@ -62,7 +69,7 @@ def get_time_series_data(table: str, linecode: str) -> Dict[str, List[float]]:
 
 
 # Get the mean of each state, country proportions
-def get_county_proportion(table: str, linecode: str) -> Dict[str, float]:
+def get_county_proportion(table: str, linecode: str) -> Dict[str, List[Dict[str, Union[int, float]]]]:
     state_regex = re.compile('^[0-9]*US[0-9]{2}')
     table_path = find_datafile(table)
     raw_data = pd.read_csv(table_path)
@@ -71,14 +78,15 @@ def get_county_proportion(table: str, linecode: str) -> Dict[str, float]:
     raw_data['State_Geoid'] = raw_data['GEO_ID'].map(lambda x: state_regex.search(x).group(0));
     # Get sum for the state for each county/year to do proportion calc
     county_year_sum = raw_data.groupby(['State_Geoid', 'TimePeriod'])['Values'].transform('sum')
-    county_year_pct = 100 * (raw_data['Values'] / county_year_sum)
+    county_year_pct = round(100 * (raw_data['Values'] / county_year_sum), 2)
     year_sum = raw_data.groupby(['TimePeriod'])['Values'].transform('sum')
     raw_data['county_pct'] = county_year_pct
     pivoted_county_proportion = pd.pivot_table(raw_data, index='GEO_ID', columns='TimePeriod', aggfunc='sum', values='county_pct', fill_value=0.0)
-    return pivoted_county_proportion.T.to_dict(orient='list')
+    pivot_melt = pd.melt(pivoted_county_proportion.reset_index(), id_vars='GEO_ID')
+    return pivot_melt.groupby('GEO_ID').apply(lambda x: x[['TimePeriod', 'value']].to_dict(orient='records')).to_dict()
 
 
-def get_state_proportion(table: str, linecode: str) -> Dict[str, float]:
+def get_state_proportion(table: str, linecode: str) -> Dict[str, List[Dict[str, Union[int, float]]]]:
     state_regex = re.compile('^[0-9]*US[0-9]{2}')
     table_path = find_datafile(table)
     raw_data = pd.read_csv(table_path)
@@ -87,7 +95,9 @@ def get_state_proportion(table: str, linecode: str) -> Dict[str, float]:
     raw_data['State_Geoid'] = raw_data['GEO_ID'].map(lambda x: state_regex.search(x).group(0));
     pivoted_state_sum = pd.pivot_table(raw_data, index='State_Geoid', columns='TimePeriod', aggfunc='sum', values='Values', fill_value=0.0)
     state_proportions = pivoted_state_sum.div(pivoted_state_sum.sum(axis=0), axis=1)
-    return state_proportions.T.to_dict(orient='list')
+    pivot_melt = pd.melt(state_proportions.reset_index(), id_vars='State_Geoid')
+    pivot_melt['value'] = round(pivot_melt['value'] * 100, 2)
+    return pivot_melt.groupby('State_Geoid').apply(lambda x: x[['TimePeriod', 'value']].to_dict(orient='records')).to_dict()
 
 
 def get_years(table: str) -> List[int]:

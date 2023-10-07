@@ -67,8 +67,9 @@ def get_time_series_data(table: str, linecode: str) -> Dict[str, List[float]]:
     pivoted_table = pd.pivot_table(raw_data, index='GEO_ID', columns='TimePeriod', values='Values', fill_value=0.0)
     # The .T is the transpose
     geoid_to_timeseries = pivoted_table.T.to_dict(orient='list')
-    # pivot_melt = pd.melt(pivoted_table.reset_index(), id_vars='GEO_ID')
-    # pivot_grouped = pivot_melt.groupby('GEO_ID')['value'].apply(list)
+    pivot_melt = pd.melt(pivoted_table.reset_index(), id_vars='GEO_ID')
+    # pivot_grouped_dict = pivot_melt.groupby('GEO_ID')['value'].apply(list)
+    pivot_grouped_dict = pivot_melt.groupby('GEO_ID').apply(lambda x: x[['TimePeriod', 'value']].to_dict(orient='records')).to_dict()
 
 
     # This assumes no missing data but is very simple
@@ -92,6 +93,8 @@ def get_county_proportion_test(table: str, linecode: str) -> Dict[str, float]:
     county_year_pct = 100 * (raw_data['Values'] / county_year_sum)
     raw_data['county_pct'] = county_year_pct
     pivoted_county_proportion = pd.pivot_table(raw_data, index='GEO_ID', columns='TimePeriod', aggfunc='sum', values='county_pct', fill_value=0.0)
+    pivot_melt = pd.melt(pivoted_county_proportion.reset_index(), id_vars='GEO_ID')
+    pivot_grouped_dict = pivot_melt.groupby('GEO_ID').apply(lambda x: x[['TimePeriod', 'value']].to_dict(orient='records')).to_dict()
     county_proportions_dict = pivoted_county_proportion.T.to_dict(orient='list')
 
 
@@ -105,6 +108,9 @@ def get_state_proportion_test(table: str, linecode: str) -> Dict[str, List[float
     import pdb; pdb.set_trace()
     pivoted_state_sum = pd.pivot_table(raw_data, index='State_Geoid', columns='TimePeriod', aggfunc='sum', values='Values', fill_value=0.0)
     state_proportions = pivoted_state_sum.div(pivoted_state_sum.sum(axis=0), axis=1)
+
+    pivot_melt = pd.melt(state_proportions.reset_index(), id_vars='State_Geoid')
+    pivot_grouped_dict = pivot_melt.groupby('State_Geoid').apply(lambda x: x[['TimePeriod', 'value']].to_dict(orient='records')).to_dict()
     # The quick way; if you have a pivot table, index may already be set fine
     state_proportions_dict = state_proportions.T.to_dict(orient='list')
     # Otherwise examples of how to get list, dict other ways
@@ -119,6 +125,6 @@ def get_state_proportion_test(table: str, linecode: str) -> Dict[str, List[float
 ## as a rate of change graph. Will not be defined for most recent year.  
 
 
-blah = get_time_series_data('CAINC1', 1)
-blah = get_county_proportion_test('CAINC1', 1)
+# blah = get_time_series_data('CAINC1', 1)
+# blah = get_county_proportion_test('CAINC1', 1)
 blah = get_state_proportion_test('CAINC1', 1)
