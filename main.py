@@ -87,7 +87,7 @@ async def get_years_for_table(table: str) -> Dict[str, List[int]]:
     return {'years': years}
 
 
-geojson_names = set(['us_state', 'us_county'])
+geojson_names = set(['us_state', 'us_county', 'us_county_combined'])
 @app.get("/geojson/{name}")
 async def get_geojson(name: str) -> GeoData:
     print('Geojson data endpoint hit')

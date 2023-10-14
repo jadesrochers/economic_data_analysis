@@ -119,6 +119,17 @@ def get_state_proportion_test(table: str, linecode: str) -> Dict[str, List[float
     # state_proportion_timeseries = proportion_melt.groupby('State_Geoid')['value'].apply(list)
 
 
+import geojson
+def write_geojson_to_text_json(name: str, file_name: str):
+    data = geojson.getgeojson(name)
+    geojson.write_text_geojson(data, file_name)
+
+
+def geojson_text_to_binary(infile: str, outfile: str):
+    json = geojson.read_text_geojson(infile)
+    geojson.pickle_data_binary(json, outfile)
+
+
 
 #### TODO: Other values to calculate: 
 ## Percent change from the previous year could be neat to see
@@ -127,4 +138,9 @@ def get_state_proportion_test(table: str, linecode: str) -> Dict[str, List[float
 
 # blah = get_time_series_data('CAINC1', 1)
 # blah = get_county_proportion_test('CAINC1', 1)
-blah = get_state_proportion_test('CAINC1', 1)
+# blah = get_state_proportion_test('CAINC1', 1)
+# write_geojson_to_text_json('us_county', 'us_county_text_geojson.json')
+geojson_text_to_binary('us_county_text_geojson_citycounty.json', 'us_county_binary_geojson_citycounty.json') 
+blah = geojson.getgeojson('us_county_combined')
+import pdb; pdb.set_trace()
+
