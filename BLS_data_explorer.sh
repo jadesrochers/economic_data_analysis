@@ -1,7 +1,7 @@
 # Get all survey data and see what is out there
 curl -X GET -o BLS_surveys.json -L "https://api.bls.gov/publicAPI/v2/surveys"
 # Single survey data
-curl -X GET -o BLS_surveys_AP_consumerPriceData.json -L "https://api.bls.gov/publicAPI/v2/surveys/AP"
+curl -X GET -o BLS_surveys_LN_LaborForce.json -L "https://api.bls.gov/publicAPI/v2/surveys/LN"
 
 # Get 25 most popular time series within a survey
 curl -X GET -o BLS_surveys_CPS_consumerPriceData.json -L "https://api.bls.gov/publicAPI/v2/timeseries/popular?survey=AP"

@@ -1,15 +1,18 @@
 #!/bin/bash
 
-# Dataset=$1
-Dataset=CAINC1
+Dataset=$1
+# Dataset=CAINC1
 
 # Use "COUNTY" for all counties
-# Region=$2
-Region=COUNTY
+Region=$2
+# Region=COUNTY
 
 # Linecode
-# LineCode=$3
-LineCode=2
+IFS_back="$IFS"
+IFS=','
+read -ra LineCodes <<< "$3"
+IFS="$IFS_back"
+# LineCode=2
 
 # Can specify year range
 Years=All
@@ -30,9 +33,7 @@ UserToken=74B6144A-CFBF-48F9-9A6E-F50213F7FA39
 get_linecodes() {
     tablename="$1"
     local filename="tmp_BEA_linecodes.json"
-    curl -X GET -o "$filename" -L "https://apps.bea.gov/api/data?UserID=${UserToken}&method=GetParameterValues&datasetname=Regional&ParameterName=LineCode&ResultFormat=${Format}" 
-    # curl -X GET -o "$filename" -L "http://apps.bea.gov/api/data?UserID=${UserToken}&method=GetParameterValuesFiltered&datasetname=Regional&TargetParameter=LineCode&TableName=${Dataset}&ResultFormat=${Format}"
-    # printf "linecode data: %s\n" "$(jq < tmp_BEA_linecodes.json)"
+    curl -X GET -o "$filename" -L "http://apps.bea.gov/api/data?UserID=${UserToken}&method=GetParameterValuesFiltered&datasetname=Regional&TargetParameter=LineCode&TableName=${Dataset}&ResultFormat=${Format}"
     linecodes=$(jq < tmp_BEA_linecodes.json | grep -C 1 -i "$tablename" | grep -i key | sed 's/"//g' | sed -r 's/[^0-9]*([0-9]+).*/\1/' | uniq)
     rm "$filename"
     printf '%s\n' "$linecodes"
@@ -81,7 +82,13 @@ append_more_data() {
 ### !!! Don't use this unless you know it won't go over the size limit
 ## Size limit is 100 requests or 100MB per min
 
-LineCodes=($(get_linecodes "$Dataset"))
+if [[ ${#LineCodes[@]} == 0 ]]; then
+    printf "Downloading Linecodes"
+    LineCodes=($(get_linecodes "$Dataset"))
+fi
+printf "Linecodes: \n"
+printf "%s\n" ${LineCodes[@]}
+exit
 n=0
 basefilename=''
 for linecode in ${LineCodes[@]}; do

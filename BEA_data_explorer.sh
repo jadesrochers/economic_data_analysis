@@ -45,7 +45,7 @@ curl -X GET -o dl_bea_dataset_Regional_TableNames.json -L "http://apps.bea.gov/a
 ### Which contain differing, but also often overlapping data
 
 ## Determining Line codes - 
-curl -X GET -o dl_bea_linecodes_CAINC1.json -L "http://apps.bea.gov/api/data?UserID=74B6144A-CFBF-48F9-9A6E-F50213F7FA39&method=GetParameterValuesFiltered&datasetname=Regional&TargetParameter=LineCode&TableName=CAINC1&ResultFormat=JSON"
+curl -X GET -o dl_bea_linecodes_CAGDP1.json -L "http://apps.bea.gov/api/data?UserID=74B6144A-CFBF-48F9-9A6E-F50213F7FA39&method=GetParameterValuesFiltered&datasetname=Regional&TargetParameter=LineCode&TableName=CAGDP1&ResultFormat=JSON"
 
 # Get nice pretty print of the result
 jq -C < dl_bea_dataset_parameter_args.json
