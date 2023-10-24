@@ -5,6 +5,8 @@ import pandas as pd
 import re
 from typing import Dict, List
 import locale
+import beadata
+import numpy as np
 
 # Will use the system locale to determine the locale to set
 # relevant for str -> numeric conversions and other stuff (what else?) 
@@ -54,7 +56,11 @@ def get_time_series_data(table: str, linecode: str) -> Dict[str, List[float]]:
     table_path = find_datafile(table)
     raw_data = pd.read_csv(table_path)
     data_series = '{table}-{linecode}'.format(table=table, linecode=linecode)
-    raw_data['Values'] = raw_data[data_series].map(lambda x: default_value if  x.startswith('(NA)') else locale.atof(x))
+    import pdb; pdb.set_trace()
+    if raw_data.dtypes[data_series] == np.dtype('str'):
+        raw_data['Values'] = raw_data[data_series].map(lambda x: default_value if  x.startswith('(NA)') else locale.atof(x))
+    else:
+        raw_data['Values'] = raw_data[data_series]
 
     # This might be broken - it is very slow and a pain
     # group_values = raw_data.groupby(['GEO_ID', 'TimePeriod'])['Values'].fillna(value=0.0)
@@ -140,7 +146,12 @@ def geojson_text_to_binary(infile: str, outfile: str):
 # blah = get_county_proportion_test('CAINC1', 1)
 # blah = get_state_proportion_test('CAINC1', 1)
 # write_geojson_to_text_json('us_county', 'us_county_text_geojson.json')
-geojson_text_to_binary('us_county_text_geojson_citycounty.json', 'us_county_binary_geojson_citycounty.json') 
-blah = geojson.getgeojson('us_county_combined')
-import pdb; pdb.set_trace()
+# geojson_text_to_binary('us_county_text_geojson_citycounty.json', 'us_county_binary_geojson_citycounty.json') 
+# blah = geojson.getgeojson('us_county_combined')
 
+table = 'CAGDP1'
+# table = 'CAINC1'
+linecode = '3'
+import pdb; pdb.set_trace()
+data = get_time_series_data(table, linecode)
+blah = geojson.getgeojson('us_county_combined')

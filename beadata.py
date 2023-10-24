@@ -5,6 +5,7 @@ import pandas as pd
 import re
 from typing import Dict, List, Union
 import locale
+import numpy as np
 
 # Will use the system locale to determine the locale to set
 # relevant for str -> numeric conversions and other stuff (what else?) 
@@ -50,7 +51,13 @@ def get_time_series_data(table: str, linecode: str) -> Dict[str, List[Dict[str, 
     table_path = find_datafile(table)
     raw_data = pd.read_csv(table_path)
     data_series = '{table}-{linecode}'.format(table=table, linecode=linecode)
-    raw_data['Values'] = raw_data[data_series].map(lambda x: default_value if  x.startswith('(NA)') else round(locale.atof(x), 2))
+
+    # Convert data if needed, and make column to manipulate
+    if raw_data.dtypes[data_series] == np.dtype('str'):
+        raw_data['Values'] = raw_data[data_series].map(lambda x: default_value if  x.startswith('(NA)') else locale.atof(x))
+    else:
+        raw_data['Values'] = raw_data[data_series]
+
     # This should work and replace missing with 0.0: 
     pivoted_table = pd.pivot_table(raw_data, index='GEO_ID', columns='TimePeriod', values='Values', fill_value=0.0)
 

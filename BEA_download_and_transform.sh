@@ -88,7 +88,6 @@ if [[ ${#LineCodes[@]} == 0 ]]; then
 fi
 printf "Linecodes: \n"
 printf "%s\n" ${LineCodes[@]}
-exit
 n=0
 basefilename=''
 for linecode in ${LineCodes[@]}; do
