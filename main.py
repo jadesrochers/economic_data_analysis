@@ -42,7 +42,7 @@ async def get_county_timeseries(table: str, linecode: str) -> Dict[str, List[Dic
 
 @app.get("/beadata/county_proportions/{table}/{linecode}")
 async def get_county_proportion(table: str, linecode: str) -> Dict[str, List[Dict[str, Union[int, float]]]]:
-    print('Getting time series for table: {table}, linecode: {linecode}'.format(table=table, linecode=linecode))
+    print('Getting county proportion for table: {table}, linecode: {linecode}'.format(table=table, linecode=linecode))
     # Code to get the table data 
     data = {}
     try:
@@ -54,7 +54,7 @@ async def get_county_proportion(table: str, linecode: str) -> Dict[str, List[Dic
 
 @app.get("/beadata/state_proportions/{table}/{linecode}")
 async def get_state_proportion(table: str, linecode: str) -> Dict[str, List[Dict[str, Union[int, float]]]]:
-    print('Getting time series for table: {table}, linecode: {linecode}'.format(table=table, linecode=linecode))
+    print('Getting state proportion for table: {table}, linecode: {linecode}'.format(table=table, linecode=linecode))
     # Code to get the table data 
     data = {}
     try:

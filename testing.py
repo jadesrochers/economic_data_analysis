@@ -56,7 +56,6 @@ def get_time_series_data(table: str, linecode: str) -> Dict[str, List[float]]:
     table_path = find_datafile(table)
     raw_data = pd.read_csv(table_path)
     data_series = '{table}-{linecode}'.format(table=table, linecode=linecode)
-    import pdb; pdb.set_trace()
     if raw_data.dtypes[data_series] == np.dtype('str'):
         raw_data['Values'] = raw_data[data_series].map(lambda x: default_value if  x.startswith('(NA)') else locale.atof(x))
     else:
@@ -69,7 +68,6 @@ def get_time_series_data(table: str, linecode: str) -> Dict[str, List[float]]:
     # group_values = group_values.groupby('GEO_ID')['value'].apply(list)
 
     # This should work and replace missing with 0.0: 
-    import pdb; pdb.set_trace()
     pivoted_table = pd.pivot_table(raw_data, index='GEO_ID', columns='TimePeriod', values='Values', fill_value=0.0)
     # The .T is the transpose
     geoid_to_timeseries = pivoted_table.T.to_dict(orient='list')
@@ -91,9 +89,12 @@ def get_county_proportion_test(table: str, linecode: str) -> Dict[str, float]:
     table_path = find_datafile(table)
     raw_data = pd.read_csv(table_path)
     data_series = '{table}-{linecode}'.format(table=table, linecode=linecode)
-    raw_data['Values'] = raw_data[data_series].map(lambda x: default_value if  x.startswith('(NA)') else locale.atof(x))
-    raw_data['State_Geoid'] = raw_data['GEO_ID'].map(lambda x: state_regex.search(x).group(0));
     import pdb; pdb.set_trace()
+    if raw_data.dtypes[data_series] == np.dtype('str'):
+        raw_data['Values'] = raw_data[data_series].map(lambda x: default_value if  x.startswith('(NA)') else locale.atof(x))
+    else:
+        raw_data['Values'] = raw_data[data_series]
+    raw_data['State_Geoid'] = raw_data['GEO_ID'].map(lambda x: state_regex.search(x).group(0));
     # and some country summations
     county_year_sum = raw_data.groupby(['State_Geoid', 'TimePeriod'])['Values'].transform('sum')
     county_year_pct = 100 * (raw_data['Values'] / county_year_sum)
@@ -109,9 +110,11 @@ def get_state_proportion_test(table: str, linecode: str) -> Dict[str, List[float
     table_path = find_datafile(table)
     raw_data = pd.read_csv(table_path)
     data_series = '{table}-{linecode}'.format(table=table, linecode=linecode)
-    raw_data['Values'] = raw_data[data_series].map(lambda x: default_value if  x.startswith('(NA)') else locale.atof(x))
+    if raw_data.dtypes[data_series] == np.dtype('str'):
+        raw_data['Values'] = raw_data[data_series].map(lambda x: default_value if  x.startswith('(NA)') else locale.atof(x))
+    else:
+        raw_data['Values'] = raw_data[data_series]
     raw_data['State_Geoid'] = raw_data['GEO_ID'].map(lambda x: state_regex.search(x).group(0));
-    import pdb; pdb.set_trace()
     pivoted_state_sum = pd.pivot_table(raw_data, index='State_Geoid', columns='TimePeriod', aggfunc='sum', values='Values', fill_value=0.0)
     state_proportions = pivoted_state_sum.div(pivoted_state_sum.sum(axis=0), axis=1)
 
@@ -152,6 +155,9 @@ def geojson_text_to_binary(infile: str, outfile: str):
 table = 'CAGDP1'
 # table = 'CAINC1'
 linecode = '3'
-import pdb; pdb.set_trace()
 data = get_time_series_data(table, linecode)
-blah = geojson.getgeojson('us_county_combined')
+import pdb; pdb.set_trace()
+data = get_county_proportion_test(table, linecode)
+import pdb; pdb.set_trace()
+data = get_state_proportion_test(table, linecode)
+import pdb; pdb.set_trace()

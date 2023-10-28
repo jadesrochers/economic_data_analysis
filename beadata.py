@@ -81,7 +81,10 @@ def get_county_proportion(table: str, linecode: str) -> Dict[str, List[Dict[str,
     table_path = find_datafile(table)
     raw_data = pd.read_csv(table_path)
     data_series = '{table}-{linecode}'.format(table=table, linecode=linecode)
-    raw_data['Values'] = raw_data[data_series].map(lambda x: default_value if  x.startswith('(NA)') else locale.atof(x))
+    if raw_data.dtypes[data_series] == np.dtype('str'):
+        raw_data['Values'] = raw_data[data_series].map(lambda x: default_value if  x.startswith('(NA)') else locale.atof(x))
+    else:
+        raw_data['Values'] = raw_data[data_series]
     raw_data['State_Geoid'] = raw_data['GEO_ID'].map(lambda x: state_regex.search(x).group(0));
     # Get sum for the state for each county/year to do proportion calc
     county_year_sum = raw_data.groupby(['State_Geoid', 'TimePeriod'])['Values'].transform('sum')
@@ -98,7 +101,10 @@ def get_state_proportion(table: str, linecode: str) -> Dict[str, List[Dict[str, 
     table_path = find_datafile(table)
     raw_data = pd.read_csv(table_path)
     data_series = '{table}-{linecode}'.format(table=table, linecode=linecode)
-    raw_data['Values'] = raw_data[data_series].map(lambda x: default_value if  x.startswith('(NA)') else locale.atof(x))
+    if raw_data.dtypes[data_series] == np.dtype('str'):
+        raw_data['Values'] = raw_data[data_series].map(lambda x: default_value if  x.startswith('(NA)') else locale.atof(x))
+    else:
+        raw_data['Values'] = raw_data[data_series]
     raw_data['State_Geoid'] = raw_data['GEO_ID'].map(lambda x: state_regex.search(x).group(0));
     pivoted_state_sum = pd.pivot_table(raw_data, index='State_Geoid', columns='TimePeriod', aggfunc='sum', values='Values', fill_value=0.0)
     state_proportions = pivoted_state_sum.div(pivoted_state_sum.sum(axis=0), axis=1)
