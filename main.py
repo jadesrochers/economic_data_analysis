@@ -22,7 +22,6 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-
 @app.get("/health")
 async def root():
     return {"message": "Server is operating"}
@@ -59,6 +58,30 @@ async def get_state_proportion(table: str, linecode: str) -> Dict[str, List[Dict
     data = {}
     try:
         data = beadata.get_state_proportion(table, linecode)
+    except Exception as e:
+        raise HTTPException(status_code=404, detail='Problem retrieving time series for table: {table} linecode: {linecode}'.format(table=table, linecode=linecode))
+    return data
+
+
+@app.get("/beadata/county_ratios/{table}/{linecode}")
+async def get_county_ratio(table: str, linecode: str) -> Dict[str, List[Dict[str, Union[int, float]]]]:
+    print('Getting county proportion for table: {table}, linecode: {linecode}'.format(table=table, linecode=linecode))
+    # Code to get the table data 
+    data = {}
+    try:
+        data = beadata.get_county_ratio(table, linecode)
+    except Exception as e:
+        raise HTTPException(status_code=404, detail='Problem retrieving time series for table: {table} linecode: {linecode}'.format(table=table, linecode=linecode))
+    return data
+
+
+@app.get("/beadata/state_ratios/{table}/{linecode}")
+async def get_state_ratio(table: str, linecode: str) -> Dict[str, List[Dict[str, Union[int, float]]]]:
+    print('Getting state proportion for table: {table}, linecode: {linecode}'.format(table=table, linecode=linecode))
+    # Code to get the table data 
+    data = {}
+    try:
+        data = beadata.get_state_ratio(table, linecode)
     except Exception as e:
         raise HTTPException(status_code=404, detail='Problem retrieving time series for table: {table} linecode: {linecode}'.format(table=table, linecode=linecode))
     return data

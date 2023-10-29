@@ -3,6 +3,7 @@ import csv
 from pathlib import Path
 import pandas as pd
 import re
+import math
 from typing import Dict, List
 import locale
 import beadata
@@ -105,6 +106,27 @@ def get_county_proportion_test(table: str, linecode: str) -> Dict[str, float]:
     county_proportions_dict = pivoted_county_proportion.T.to_dict(orient='list')
 
 
+def get_county_ratio_test(table: str, linecode: str) -> Dict[str, float]:
+    state_regex = re.compile('^[0-9]*US[0-9]{2}')
+    table_path = find_datafile(table)
+    raw_data = pd.read_csv(table_path)
+    data_series = '{table}-{linecode}'.format(table=table, linecode=linecode)
+    if raw_data.dtypes[data_series] == np.dtype('str'):
+        raw_data['Values'] = raw_data[data_series].map(lambda x: default_value if  x.startswith('(NA)') else locale.atof(x))
+    else:
+        raw_data['Values'] = raw_data[data_series]
+    raw_data['State_Geoid'] = raw_data['GEO_ID'].map(lambda x: state_regex.search(x).group(0));
+    # and some country summations
+    county_year_mean = raw_data.groupby(['State_Geoid', 'TimePeriod'])['Values'].transform('mean')
+    county_year_pct = round(100 * (raw_data['Values'] / county_year_mean),3)
+    raw_data['county_ratio'] = county_year_pct
+    # This is only for filling blanks, so the afffunc does not matter
+    pivoted_county_proportion = pd.pivot_table(raw_data, index='GEO_ID', columns='TimePeriod', aggfunc='sum', values='county_ratio', fill_value=0.0)
+    pivot_melt = pd.melt(pivoted_county_proportion.reset_index(), id_vars='GEO_ID')
+    pivot_grouped_dict = pivot_melt.groupby('GEO_ID').apply(lambda x: x[['TimePeriod', 'value']].to_dict(orient='records')).to_dict()
+    county_proportions_dict = pivoted_county_proportion.T.to_dict(orient='list')
+
+
 def get_state_proportion_test(table: str, linecode: str) -> Dict[str, List[float]]:
     state_regex = re.compile('^[0-9]*US[0-9]{2}')
     table_path = find_datafile(table)
@@ -115,7 +137,7 @@ def get_state_proportion_test(table: str, linecode: str) -> Dict[str, List[float
     else:
         raw_data['Values'] = raw_data[data_series]
     raw_data['State_Geoid'] = raw_data['GEO_ID'].map(lambda x: state_regex.search(x).group(0));
-    pivoted_state_sum = pd.pivot_table(raw_data, index='State_Geoid', columns='TimePeriod', aggfunc='sum', values='Values', fill_value=0.0)
+    pivoted_state_sum = pd.pivot_table(raw_data, index='State_Geoid', columns='TimePeriod', aggfunc='mean', values='Values', fill_value=0.0)
     state_proportions = pivoted_state_sum.div(pivoted_state_sum.sum(axis=0), axis=1)
 
     pivot_melt = pd.melt(state_proportions.reset_index(), id_vars='State_Geoid')
@@ -124,6 +146,31 @@ def get_state_proportion_test(table: str, linecode: str) -> Dict[str, List[float
     state_proportions_dict = state_proportions.T.to_dict(orient='list')
     # Otherwise examples of how to get list, dict other ways
     state_proportions_list = state_proportions.values.tolist()
+    # proportion_melt = pd.melt(state_proportions.reset_index(), id_vars='State_Geoid')
+    # state_proportion_timeseries = proportion_melt.groupby('State_Geoid')['value'].apply(list)
+
+
+
+def get_state_ratio_test(table: str, linecode: str) -> Dict[str, List[float]]:
+    state_regex = re.compile('^[0-9]*US[0-9]{2}')
+    table_path = find_datafile(table)
+    raw_data = pd.read_csv(table_path)
+    data_series = '{table}-{linecode}'.format(table=table, linecode=linecode)
+    if raw_data.dtypes[data_series] == np.dtype('str'):
+        raw_data['Values'] = raw_data[data_series].map(lambda x: default_value if  x.startswith('(NA)') else locale.atof(x))
+    else:
+        raw_data['Values'] = raw_data[data_series]
+    raw_data['State_Geoid'] = raw_data['GEO_ID'].map(lambda x: state_regex.search(x).group(0));
+    pivoted_state_sum = pd.pivot_table(raw_data, index='State_Geoid', columns='TimePeriod', aggfunc='mean', values='Values', fill_value=0.0)
+    import pdb; pdb.set_trace()
+    state_ratios = round(100 * pivoted_state_sum.div(pivoted_state_sum.mean(axis=0), axis=1), 3)
+
+    pivot_melt = pd.melt(state_ratios.reset_index(), id_vars='State_Geoid')
+    pivot_grouped_dict = pivot_melt.groupby('State_Geoid').apply(lambda x: x[['TimePeriod', 'value']].to_dict(orient='records')).to_dict()
+    # The quick way; if you have a pivot table, index may already be set fine
+    state_proportions_dict = state_ratios.T.to_dict(orient='list')
+    # Otherwise examples of how to get list, dict other ways
+    state_proportions_list = state_ratios.values.tolist()
     # proportion_melt = pd.melt(state_proportions.reset_index(), id_vars='State_Geoid')
     # state_proportion_timeseries = proportion_melt.groupby('State_Geoid')['value'].apply(list)
 
@@ -139,6 +186,19 @@ def geojson_text_to_binary(infile: str, outfile: str):
     geojson.pickle_data_binary(json, outfile)
 
 
+def get_years(table: str) -> List[int]:
+    metadata_path = find_metadata(table)
+    import pdb; pdb.set_trace()
+    with open(metadata_path) as metafile:
+        data = json.load(metafile)
+    years = set()
+    years.add(min(data['years']))
+    years.add(max(data['years']))
+    for year in data['years']:
+        if int(year) % 5 == 0:
+            years.add(year)
+    return years
+
 
 #### TODO: Other values to calculate: 
 ## Percent change from the previous year could be neat to see
@@ -152,12 +212,12 @@ def geojson_text_to_binary(infile: str, outfile: str):
 # geojson_text_to_binary('us_county_text_geojson_citycounty.json', 'us_county_binary_geojson_citycounty.json') 
 # blah = geojson.getgeojson('us_county_combined')
 
-table = 'CAGDP1'
-# table = 'CAINC1'
-linecode = '3'
-data = get_time_series_data(table, linecode)
-import pdb; pdb.set_trace()
-data = get_county_proportion_test(table, linecode)
-import pdb; pdb.set_trace()
-data = get_state_proportion_test(table, linecode)
-import pdb; pdb.set_trace()
+table = 'CAINC4'
+linecode = '30'
+# data = get_time_series_data(table, linecode)
+# import pdb; pdb.set_trace()
+# data = get_county_ratio_test(table, linecode)
+# import pdb; pdb.set_trace()
+# data = get_state_ratio_test(table, linecode)
+years = get_years(table)
+

@@ -1,0 +1,10 @@
+{"BEAAPI":{"Request":{"RequestParam":[
+{"ParameterName":"USERID","ParameterValue":"74B6144A-CFBF-48F9-9A6E-F50213F7FA39"},
+{"ParameterName":"METHOD","ParameterValue":"GETPARAMETERVALUESFILTERED"},
+{"ParameterName":"DATASETNAME","ParameterValue":"REGIONAL"},
+{"ParameterName":"TARGETPARAMETER","ParameterValue":"LINECODE"},
+{"ParameterName":"TABLENAME","ParameterValue":"CAGDP1"},
+{"ParameterName":"RESULTFORMAT","ParameterValue":"JSON"}]},"Results":{"ParamValue":[
+{"Key":"1","Desc":"[CAGDP1] Real Gross Domestic Product (GDP)"},
+{"Key":"2","Desc":"[CAGDP1] Chain-type quantity indexes for real GDP"},
+{"Key":"3","Desc":"[CAGDP1] Current-dollar Gross Domestic Product (GDP)"}]}}}

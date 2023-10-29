@@ -75,7 +75,7 @@ def get_time_series_data(table: str, linecode: str) -> Dict[str, List[Dict[str, 
     # geoid_tovalue = grouped.to_dict()
 
 
-# Get the mean of each state, country proportions
+# County value relative to state total
 def get_county_proportion(table: str, linecode: str) -> Dict[str, List[Dict[str, Union[int, float]]]]:
     state_regex = re.compile('^[0-9]*US[0-9]{2}')
     table_path = find_datafile(table)
@@ -96,6 +96,28 @@ def get_county_proportion(table: str, linecode: str) -> Dict[str, List[Dict[str,
     return pivot_melt.groupby('GEO_ID').apply(lambda x: x[['TimePeriod', 'value']].to_dict(orient='records')).to_dict()
 
 
+# County value relative to state mean
+def get_county_ratio(table: str, linecode: str) -> Dict[str, List[Dict[str, Union[int, float]]]]:
+    state_regex = re.compile('^[0-9]*US[0-9]{2}')
+    table_path = find_datafile(table)
+    raw_data = pd.read_csv(table_path)
+    data_series = '{table}-{linecode}'.format(table=table, linecode=linecode)
+    if raw_data.dtypes[data_series] == np.dtype('str'):
+        raw_data['Values'] = raw_data[data_series].map(lambda x: default_value if  x.startswith('(NA)') else locale.atof(x))
+    else:
+        raw_data['Values'] = raw_data[data_series]
+    raw_data['State_Geoid'] = raw_data['GEO_ID'].map(lambda x: state_regex.search(x).group(0));
+    # Get sum for the state for each county/year to do proportion calc
+    county_year_mean = raw_data.groupby(['State_Geoid', 'TimePeriod'])['Values'].transform('mean')
+    county_year_pct = round(100 * (raw_data['Values'] / county_year_mean), 2)
+    year_mean = raw_data.groupby(['TimePeriod'])['Values'].transform('mean')
+    raw_data['county_pct'] = county_year_pct
+    pivoted_county_proportion = pd.pivot_table(raw_data, index='GEO_ID', columns='TimePeriod', aggfunc='sum', values='county_pct', fill_value=0.0)
+    pivot_melt = pd.melt(pivoted_county_proportion.reset_index(), id_vars='GEO_ID')
+    return pivot_melt.groupby('GEO_ID').apply(lambda x: x[['TimePeriod', 'value']].to_dict(orient='records')).to_dict()
+
+
+# State value relative to national total
 def get_state_proportion(table: str, linecode: str) -> Dict[str, List[Dict[str, Union[int, float]]]]:
     state_regex = re.compile('^[0-9]*US[0-9]{2}')
     table_path = find_datafile(table)
@@ -113,11 +135,35 @@ def get_state_proportion(table: str, linecode: str) -> Dict[str, List[Dict[str, 
     return pivot_melt.groupby('State_Geoid').apply(lambda x: x[['TimePeriod', 'value']].to_dict(orient='records')).to_dict()
 
 
+# State value relative to national mean
+def get_state_ratio(table: str, linecode: str) -> Dict[str, List[Dict[str, Union[int, float]]]]:
+    state_regex = re.compile('^[0-9]*US[0-9]{2}')
+    table_path = find_datafile(table)
+    raw_data = pd.read_csv(table_path)
+    data_series = '{table}-{linecode}'.format(table=table, linecode=linecode)
+    if raw_data.dtypes[data_series] == np.dtype('str'):
+        raw_data['Values'] = raw_data[data_series].map(lambda x: default_value if  x.startswith('(NA)') else locale.atof(x))
+    else:
+        raw_data['Values'] = raw_data[data_series]
+    raw_data['State_Geoid'] = raw_data['GEO_ID'].map(lambda x: state_regex.search(x).group(0));
+    pivoted_state_mean = pd.pivot_table(raw_data, index='State_Geoid', columns='TimePeriod', aggfunc='mean', values='Values', fill_value=0.0)
+    state_proportions = pivoted_state_mean.div(pivoted_state_mean.mean(axis=0), axis=1)
+    pivot_melt = pd.melt(state_proportions.reset_index(), id_vars='State_Geoid')
+    pivot_melt['value'] = round(pivot_melt['value'] * 100, 3)
+    return pivot_melt.groupby('State_Geoid').apply(lambda x: x[['TimePeriod', 'value']].to_dict(orient='records')).to_dict()
+
+
 def get_years(table: str) -> List[int]:
     metadata_path = find_metadata(table)
     with open(metadata_path) as metafile:
         data = json.load(metafile)
-        return data['years']
+    years = set()
+    years.add(min(data['years']))
+    years.add(max(data['years']))
+    for year in data['years']:
+        if int(year) % 5 == 0:
+            years.add(year)
+    return years
 
 
 # cat my.csv | python -c 'import csv, json, sys; print(json.dumps([dict(r) for r in csv.DictReader(sys.stdin)]))'
