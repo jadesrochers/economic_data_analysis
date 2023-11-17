@@ -99,12 +99,19 @@ async def get_table_annual_data(table: str, linecode: str, year: str) -> Dict[st
     return {'annual_data': data}
 
 
-
-
-@app.get("/beadata/{table}/years")
+@app.get("/beadata/{table}/years_all")
 async def get_years_for_table(table: str) -> Dict[str, List[int]]:
     try:
-        years = beadata.get_years(table)
+        years = beadata.get_all_years(table)
+    except Exception as e:
+        raise HTTPException(status_code=404, detail='Problem retrieving years for table: {table}'.format(table=table))
+    return {'years': years}
+
+
+@app.get("/beadata/{table}/years_index")
+async def get_years_for_table(table: str) -> Dict[str, List[int]]:
+    try:
+        years = beadata.get_index_years(table)
     except Exception as e:
         raise HTTPException(status_code=404, detail='Problem retrieving years for table: {table}'.format(table=table))
     return {'years': years}

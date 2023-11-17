@@ -153,7 +153,7 @@ def get_state_ratio(table: str, linecode: str) -> Dict[str, List[Dict[str, Union
     return pivot_melt.groupby('State_Geoid').apply(lambda x: x[['TimePeriod', 'value']].to_dict(orient='records')).to_dict()
 
 
-def get_years(table: str) -> List[int]:
+def get_index_years(table: str) -> List[int]:
     metadata_path = find_metadata(table)
     with open(metadata_path) as metafile:
         data = json.load(metafile)
@@ -164,6 +164,13 @@ def get_years(table: str) -> List[int]:
         if int(year) % 5 == 0:
             years.add(year)
     return years
+
+
+def get_all_years(table: str) -> List[int]:
+    metadata_path = find_metadata(table)
+    with open(metadata_path) as metafile:
+        data = json.load(metafile)
+    return data['years']
 
 
 # cat my.csv | python -c 'import csv, json, sys; print(json.dumps([dict(r) for r in csv.DictReader(sys.stdin)]))'
