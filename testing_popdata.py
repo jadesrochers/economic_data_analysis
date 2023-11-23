@@ -38,6 +38,8 @@ def find_data_cols(raw_data: DataFrame, pattern: Pattern) -> Tuple[DataFrame, Li
 
 
 def create_sub_dicts(use_columns, df):
+    # Put this in a function because otherwise the lambda has no scope
+    # to find the use_columns variable
     return df.groupby('geo_id').apply(lambda x: x[use_columns].to_dict(orient='records')).to_dict()
 
 
@@ -54,19 +56,7 @@ def get_time_series_data(number: str) -> Dict[str, List[Dict[str, Union[int, flo
         if df.dtypes[col] == np.dtype('str'):
             raw_data[col] = raw_data[col].map(lambda x: default_value if  x.startswith('(NA)') else locale.atof(x))
 
-    # This should work and replace missing with 0.0: 
-    # pivoted_table = pd.pivot_table(raw_data, index='GEO_ID', columns='TimePeriod', values='Values', fill_value=0.0)
-
-    ## This gets each GEO_ID: a dict with TimePeriod/value as keys and
-    # the respective time/value as the values, which should work for format.
-    # pivot_melt = pd.melt(pivoted_table.reset_index(), id_vars='GEO_ID')
-    import pdb; pdb.set_trace()
-    blah = create_sub_dicts(use_columns, df)
-    return blah
-    # pivot_grouped = pivot_melt.groupby('GEO_ID')['value'].apply(list)
-    # This assumes no missing data but is very simple
-    # grouped = raw_data.groupby('GEO_ID')['Values'].apply(list)
-    # geoid_tovalue = grouped.to_dict()
+    return create_sub_dicts(use_columns, df)
 
 
 blah = get_time_series_data('01')
