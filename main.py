@@ -5,6 +5,7 @@ from model.geojson import GeoData
 from geojson import getgeojson
 from typing import Dict, List, Union
 import beadata
+import popdata
 
 app = FastAPI()
 
@@ -114,6 +115,52 @@ async def get_years_for_table(table: str) -> Dict[str, List[int]]:
         years = beadata.get_index_years(table)
     except Exception as e:
         raise HTTPException(status_code=404, detail='Problem retrieving years for table: {table}'.format(table=table))
+    return {'years': years}
+
+
+
+@app.get("/popdata/county_timeseries/{number}")
+async def get_county_timeseries(number: str) -> Dict[str, List[Dict[str, Union[int, float]]]]:
+    print('Getting time series for table num: {number}'.format(number=number))
+    # Code to get the table data 
+    data = {}
+    try:
+        data = popdata.get_time_series_data(number)
+    except Exception as e:
+        raise HTTPException(status_code=404, detail='Problem retrieving time series for table num: {number}'.format(number=number))
+    return data
+
+
+@app.get("/popdata/county_proportions/{number}")
+async def get_county_proportion(number: str) -> Dict[str, List[Dict[str, Union[int, float]]]]:
+    print('Getting county proportion for table num: {number}'.format(number=number))
+    # Code to get the table data 
+    data = {}
+    try:
+        data = popdata.get_county_proportion(number)
+    except Exception as e:
+        raise HTTPException(status_code=404, detail='Problem retrieving time series for table num: {number}'.format(number=number))
+    return data
+
+
+@app.get("/popdata/state_proportions/{number}")
+async def get_state_proportion(number: str) -> Dict[str, List[Dict[str, Union[int, float]]]]:
+    print('Getting state proportion for table num: {number}'.format(number=number))
+    # Code to get the table data 
+    data = {}
+    try:
+        data = popdata.get_state_proportion(number)
+    except Exception as e:
+        raise HTTPException(status_code=404, detail='Problem retrieving time series for table num: {number}'.format(number=number))
+    return data
+
+
+@app.get("/popdata/{number}/years_all")
+async def get_years_for_table(number: str) -> Dict[str, List[int]]:
+    try:
+        years = popdata.get_all_years(number)
+    except Exception as e:
+        raise HTTPException(status_code=404, detail='Problem retrieving years for table: {number}'.format(number=number))
     return {'years': years}
 
 
